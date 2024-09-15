@@ -2,131 +2,172 @@
 Dominando o Armazenamento na Azure
 Aqui está um exemplo de um README detalhado para configurar recursos e dimensionar máquinas virtuais (VMs) no Microsoft Azure:
 
+Aqui está um exemplo de um README detalhado para configurar e gerenciar armazenamento de dados no Azure:
+
 ---
 
-# Configuração de Recursos e Dimensionamento de Máquinas Virtuais na Azure
+# Configuração de Armazenamento de Dados no Azure
 
-Este tutorial fornece um passo a passo para criar e configurar máquinas virtuais na Microsoft Azure, ajustar seus recursos e gerenciar o dimensionamento conforme as necessidades de carga de trabalho.
+Este tutorial orienta você no processo de configuração e gerenciamento de serviços de armazenamento de dados no Microsoft Azure, cobrindo desde a criação de contas de armazenamento até a utilização de diferentes tipos de armazenamento.
 
 ## Pré-requisitos
-
-Antes de começar, certifique-se de ter:
 
 - Uma conta ativa no [Azure](https://portal.azure.com).
 - Permissões para criar e gerenciar recursos no Azure.
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) ou acesso ao portal Azure.
 
-## Passo 1: Entrando no Azure Portal
+## Passo 1: Criando uma Conta de Armazenamento no Azure
 
-1. Acesse o [Portal do Azure](https://portal.azure.com).
-2. Faça login com sua conta do Azure.
-
-## Passo 2: Criando uma Máquina Virtual
+A Conta de Armazenamento do Azure é a base para todos os serviços de armazenamento, como blobs, filas, tabelas e arquivos.
 
 ### Via Portal do Azure
 
-1. No painel do Azure, clique em **Criar um recurso**.
-2. Selecione **Máquina Virtual** na lista de serviços.
-3. Preencha os campos obrigatórios:
-   - **Assinatura**: Escolha a assinatura de pagamento.
-   - **Grupo de Recursos**: Escolha um grupo existente ou crie um novo.
-   - **Nome da VM**: Escolha um nome para sua máquina virtual.
-   - **Região**: Selecione a região geográfica onde a VM será hospedada.
-   - **Imagem**: Escolha o sistema operacional da VM (por exemplo, Ubuntu, Windows).
-   - **Tamanho**: Selecione a configuração inicial de CPU e memória.
-
-4. Em **Opções de autenticação**, escolha entre:
-   - **Chave SSH** (recomendado para Linux).
-   - **Senha** (recomendado para Windows).
-
-5. Em **Disco**, selecione o tipo de disco de armazenamento:
-   - **SSD Padrão** ou **Premium** (recomendado para alto desempenho).
-
-6. Clique em **Revisar + Criar** e em seguida **Criar**.
+1. Acesse o [Portal do Azure](https://portal.azure.com).
+2. No painel à esquerda, clique em **Criar um recurso**.
+3. Pesquise por **Conta de Armazenamento** e selecione **Criar**.
+4. Preencha os detalhes:
+   - **Assinatura**: Selecione sua assinatura.
+   - **Grupo de Recursos**: Escolha um existente ou crie um novo.
+   - **Nome da Conta de Armazenamento**: Insira um nome único.
+   - **Região**: Escolha a localização geográfica onde os dados serão armazenados.
+   - **Desempenho**: Selecione entre **Padrão** ou **Premium** (Premium é recomendado para cenários com alta demanda de IOPS).
+   - **Replicação**: Escolha a opção de replicação adequada, como **LRS** (Local-Redundant Storage), **GRS** (Geo-Redundant Storage), etc.
+   
+5. Clique em **Revisar + Criar** e, em seguida, **Criar**.
 
 ### Via Azure CLI
 
 ```bash
-# Exemplo de comando para criar uma máquina virtual Ubuntu no Azure
-az vm create \
+# Exemplo de comando para criar uma conta de armazenamento
+az storage account create \
+  --name NomeDaContaDeArmazenamento \
   --resource-group NomeDoGrupoDeRecursos \
-  --name NomeDaVM \
-  --image UbuntuLTS \
-  --size Standard_B1s \
-  --admin-username azureuser \
-  --generate-ssh-keys
+  --location eastus \
+  --sku Standard_LRS
 ```
 
-## Passo 3: Ajustando o Dimensionamento da VM
+## Passo 2: Trabalhando com Armazenamento de Blobs
 
-### Redimensionar via Portal do Azure
+O armazenamento de blobs no Azure é utilizado para armazenar grandes quantidades de dados não estruturados, como imagens, vídeos e documentos.
 
-1. No portal do Azure, navegue até **Máquinas Virtuais**.
-2. Selecione a VM que deseja redimensionar.
-3. No menu à esquerda, clique em **Tamanho**.
-4. Escolha um novo tamanho de VM com base nas necessidades de CPU e memória.
-5. Clique em **Redimensionar**.
+### Criando um Contêiner de Blob
 
-### Redimensionar via Azure CLI
+1. No portal do Azure, navegue até sua **Conta de Armazenamento**.
+2. No menu à esquerda, selecione **Contêineres**.
+3. Clique em **+ Contêiner** e defina:
+   - **Nome**: Nome para o contêiner.
+   - **Nível de Acesso Público**: Selecione se o contêiner será acessível publicamente ou privado.
+
+4. Clique em **Criar**.
+
+### Via Azure CLI
 
 ```bash
-# Exemplo de comando para redimensionar uma VM
-az vm resize \
-  --resource-group NomeDoGrupoDeRecursos \
-  --name NomeDaVM \
-  --size Standard_DS2_v2
+# Criar um contêiner de blob
+az storage container create \
+  --name NomeDoContainer \
+  --account-name NomeDaContaDeArmazenamento \
+  --public-access off
 ```
 
-## Passo 4: Configurando Autoescala
+### Upload de Arquivos para o Contêiner de Blob
 
-A escalabilidade automática permite ajustar o número de instâncias de VM conforme as necessidades da carga de trabalho.
+1. No portal do Azure, navegue até o contêiner criado.
+2. Clique em **Carregar** e selecione o arquivo a ser carregado.
 
-### Configuração de Autoescala via Portal do Azure
-
-1. Navegue até **Máquinas Virtuais** e selecione o grupo de VMs.
-2. No painel à esquerda, clique em **Autoescala**.
-3. Clique em **+ Adicionar uma regra**.
-4. Defina as condições, como:
-   - **Métrica**: CPU, memória ou outros recursos.
-   - **Ação**: Escalar verticalmente ou horizontalmente.
-5. Defina os parâmetros da ação, como o número máximo de instâncias e a quantidade de incremento.
-6. Clique em **Salvar**.
-
-### Configuração de Autoescala via Azure CLI
-
-1. Crie uma política de autoescala:
+### Via Azure CLI
 
 ```bash
-az monitor autoscale create \
-  --resource-group NomeDoGrupoDeRecursos \
-  --name NomeDaRegraAutoescala \
-  --min-count 1 \
-  --max-count 5 \
-  --count 2
+# Fazer upload de um arquivo para o contêiner
+az storage blob upload \
+  --container-name NomeDoContainer \
+  --file CaminhoDoArquivo \
+  --name NomeDoBlob \
+  --account-name NomeDaContaDeArmazenamento
 ```
 
-2. Adicione uma regra de escala:
+## Passo 3: Trabalhando com Tabelas de Armazenamento
+
+O **Armazenamento de Tabelas** no Azure é uma solução NoSQL usada para armazenar grandes volumes de dados estruturados, como logs e metadados.
+
+### Criando uma Tabela de Armazenamento
+
+1. No portal do Azure, navegue até sua **Conta de Armazenamento**.
+2. Selecione **Tabelas** no menu à esquerda.
+3. Clique em **+ Tabela** e forneça um nome para a tabela.
+4. Clique em **Criar**.
+
+### Via Azure CLI
 
 ```bash
-az monitor autoscale rule create \
-  --resource-group NomeDoGrupoDeRecursos \
-  --autoscale-name NomeDaRegraAutoescala \
-  --condition "Percentage CPU > 75 avg 5m" \
-  --scale out 1
+# Criar uma tabela de armazenamento
+az storage table create \
+  --name NomeDaTabela \
+  --account-name NomeDaContaDeArmazenamento
 ```
 
-## Passo 5: Monitoramento e Otimização
+### Inserindo e Consultando Dados em uma Tabela
 
-Após configurar sua máquina virtual, é essencial monitorar o uso de recursos para garantir que o desempenho atenda às expectativas.
+```bash
+# Inserir um item na tabela
+az storage entity insert \
+  --table-name NomeDaTabela \
+  --entity PartitionKey=meuPK RowKey=meuRK Nome=Gabriel Sobrenome=Silva \
+  --account-name NomeDaContaDeArmazenamento
 
-1. No portal do Azure, navegue até **Monitoramento**.
-2. Veja as métricas de uso de CPU, memória e disco.
-3. Ajuste as configurações de dimensionamento conforme necessário.
+# Consultar dados de uma tabela
+az storage entity query \
+  --table-name NomeDaTabela \
+  --account-name NomeDaContaDeArmazenamento
+```
+
+## Passo 4: Trabalhando com o Armazenamento de Arquivos (File Share)
+
+O **File Share** do Azure permite que você crie e use compartilhamentos de arquivos SMB para montar em VMs ou acessar diretamente.
+
+### Criando um Compartilhamento de Arquivos
+
+1. No portal do Azure, vá para sua **Conta de Armazenamento**.
+2. Selecione **Compartilhamentos de Arquivos** no menu à esquerda.
+3. Clique em **+ Compartilhamento de Arquivos**.
+4. Defina um nome e o limite de cota para o compartilhamento.
+5. Clique em **Criar**.
+
+### Via Azure CLI
+
+```bash
+# Criar um compartilhamento de arquivos
+az storage share create \
+  --name NomeDoCompartilhamento \
+  --account-name NomeDaContaDeArmazenamento
+```
+
+### Montando o Compartilhamento de Arquivos em uma VM
+
+1. Navegue até o **Compartilhamento de Arquivos** criado.
+2. Clique em **Conectar** para visualizar as instruções de montagem em sistemas Windows ou Linux.
+3. Execute os comandos fornecidos na VM para montar o compartilhamento de arquivos.
+
+## Passo 5: Configurando Regras de Acesso e Políticas
+
+### Configurando Políticas de Acesso no Nível de Conta
+
+1. Na **Conta de Armazenamento**, vá até **Configurações** > **Rede**.
+2. Defina as regras de rede para permitir ou negar acesso a partir de IPs ou sub-redes específicas.
+
+### Configurando SAS (Assinaturas de Acesso Compartilhado)
+
+As SAS permitem o acesso temporário e seguro aos recursos de armazenamento.
+
+1. No portal, vá até a **Conta de Armazenamento**.
+2. Clique em **Assinatura de Acesso Compartilhado (SAS)** no menu à esquerda.
+3. Defina as permissões, data de expiração e endereços IP permitidos.
+4. Clique em **Gerar SAS** e copie a URL resultante.
 
 ## Conclusão
 
-Seguindo esses passos, você poderá configurar máquinas virtuais no Azure, ajustar seus recursos e implementar autoescala para otimizar o uso de recursos. Para mais informações, consulte a [documentação oficial do Azure](https://docs.microsoft.com/en-us/azure/virtual-machines/).
+Agora você está pronto para criar e gerenciar contas de armazenamento, configurar blobs, tabelas, compartilhamentos de arquivos e aplicar políticas de segurança no Azure. Para mais informações e exemplos avançados, consulte a [documentação oficial do Azure](https://docs.microsoft.com/pt-br/azure/storage/).
 
 ---
 
-Isso cobre o processo desde a criação até o dimensionamento e autoescala de VMs no Azure.
+Esse README fornece um guia completo para quem deseja começar a trabalhar com serviços de armazenamento no Azure.
